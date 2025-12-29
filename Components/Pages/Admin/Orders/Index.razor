@@ -32,7 +32,7 @@
                             <td>@order.User?.Email</td>
                             <td>@order.OrderDate.ToString("dd.MM.yyyy HH:mm")</td>
                             <td>
-                                <select class="form-select form-select-sm" style="width: auto; display: inline-block;" @onchange="(e) => UpdateStatus(order.Id, e.Value?.ToString() ?? "")">
+                                <select class="form-select form-select-sm" style="width: auto; display: inline-block;" @onchange="@(e => HandleStatusChange(e, order.Id))">
                                     <option value="Новый" selected="@(order.Status == "Новый")">Новый</option>
                                     <option value="В обработке" selected="@(order.Status == "В обработке")">В обработке</option>
                                     <option value="Отправлен" selected="@(order.Status == "Отправлен")">Отправлен</option>
@@ -76,6 +76,12 @@
             orders = await OrderService.GetAllOrdersAsync();
             StateHasChanged();
         }
+    }
+
+    private async Task HandleStatusChange(ChangeEventArgs e, int orderId)
+    {
+        var newStatus = e.Value?.ToString() ?? string.Empty;
+        await UpdateStatus(orderId, newStatus);
     }
 
     private async Task DeleteOrder(int id)

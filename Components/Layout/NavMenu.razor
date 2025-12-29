@@ -28,7 +28,7 @@
                         <a class="navbar-item" href="/Account/Manage">
                             <i class="bi bi-person"></i> Личный кабинет
                         </a>
-                        <AuthorizeView Roles="Admin,Manager">
+                        <AuthorizeView Roles="Admin,Manager" Context="innerContext">
                             <a class="navbar-item" href="/Admin">
                                 <i class="bi bi-gear"></i> Админ-панель
                             </a>

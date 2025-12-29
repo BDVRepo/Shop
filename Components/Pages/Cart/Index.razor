@@ -41,7 +41,7 @@
                                         <td>
                                             <div class="input-group" style="width: 120px;">
                                                 <button class="btn btn-sm btn-outline-secondary" @onclick="() => UpdateQuantity(item.ProductId, item.Quantity - 1, item.Size)">-</button>
-                                                <input type="number" class="form-control text-center" value="@item.Quantity" @onchange="(e) => UpdateQuantity(item.ProductId, int.Parse(e.Value?.ToString() ?? "1"), item.Size)" />
+                                                <input type="number" class="form-control text-center" value="@item.Quantity" @onchange="@(e => HandleQuantityChange(e, item.ProductId, item.Size))" />
                                                 <button class="btn btn-sm btn-outline-secondary" @onclick="() => UpdateQuantity(item.ProductId, item.Quantity + 1, item.Size)">+</button>
                                             </div>
                                         </td>
@@ -114,6 +114,14 @@
     {
         CartService.RemoveItem(productId, size);
         LoadCart();
+    }
+
+    private void HandleQuantityChange(ChangeEventArgs e, int productId, string? size)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var quantity))
+        {
+            UpdateQuantity(productId, quantity, size);
+        }
     }
 
     public void Dispose()

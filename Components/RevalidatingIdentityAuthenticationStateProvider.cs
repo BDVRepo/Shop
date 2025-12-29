@@ -5,7 +5,7 @@ using Microsoft.Extensions.Options;
 using Shop.Models;
 using System.Security.Claims;
 
-namespace Shop;
+namespace Shop.Components;
 
 public class RevalidatingIdentityAuthenticationStateProvider<TUser>
     : RevalidatingServerAuthenticationStateProvider where TUser : class

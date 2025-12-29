@@ -23,10 +23,6 @@ public class Product
     [Range(0.01, 999999.99, ErrorMessage = "Цена должна быть больше 0")]
     public decimal Price { get; set; }
 
-    [Display(Name = "Изображение")]
-    [StringLength(500)]
-    public string? ImageUrl { get; set; }
-
     [Display(Name = "Размеры (через запятую)")]
     [StringLength(100)]
     public string? Sizes { get; set; } // "S,M,L,XL" или "40,42,44"

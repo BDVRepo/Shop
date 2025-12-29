@@ -35,8 +35,14 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Изображение (URL)</label>
-                        <InputText class="form-control" @bind-Value="product.ImageUrl" />
+                        <label class="form-label">Изображение</label>
+                        @if (product != null)
+                        {
+                            <div class="mb-2">
+                                <img src="/images/products/@(product.Id).jpg" alt="Текущее изображение" class="img-thumbnail" style="max-height: 150px;" onerror="this.style.display='none';" />
+                            </div>
+                        }
+                        <small class="form-text text-muted">Изображение товара должно быть размещено в папке wwwroot/images/products/ с именем @(product?.Id ?? 0).jpg</small>
                     </div>
 
                     <div class="mb-3">

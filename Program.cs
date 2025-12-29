@@ -1,8 +1,10 @@
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Shop.Data;
 using Shop.Models;
 using Shop.Services;
+using Shop.Components;
 
 var builder = WebApplication.CreateBuilder(args);
 

@@ -11,16 +11,7 @@
     {
         <div class="row">
             <div class="col-md-6">
-                @if (!string.IsNullOrEmpty(product.ImageUrl))
-                {
-                    <img src="@product.ImageUrl" class="img-fluid rounded" alt="@product.Name" />
-                }
-                else
-                {
-                    <div class="bg-light d-flex align-items-center justify-content-center" style="height: 400px;">
-                        <i class="bi bi-image" style="font-size: 4rem; color: #ccc;"></i>
-                    </div>
-                }
+                <img src="/images/products/@(product.Id).jpg" class="img-fluid rounded" alt="@product.Name" onerror="this.onerror=null; this.src='/images/products/placeholder.svg';" />
             </div>
             <div class="col-md-6">
                 <h1>@product.Name</h1>

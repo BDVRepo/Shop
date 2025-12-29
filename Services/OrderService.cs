@@ -88,7 +88,7 @@ public class OrderService
             await _context.SaveChangesAsync();
             return order.OrderNumber;
         }
-        catch (Exception ex)
+        catch
         {
             return string.Empty;
         }
