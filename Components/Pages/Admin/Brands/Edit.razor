@@ -1,0 +1,68 @@
+@page "/Admin/Brands/Edit/{Id:int}"
+@attribute [Authorize(Roles = "Admin")]
+@inject BrandService BrandService
+@inject NavigationManager Navigation
+
+<PageTitle>Редактировать бренд</PageTitle>
+
+<div class="container mt-4">
+    <h2>Редактировать бренд</h2>
+    <hr />
+
+    @if (brand != null)
+    {
+        <EditForm Model="@brand" OnValidSubmit="@HandleValidSubmit">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" />
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Название бренда *</label>
+                        <InputText class="form-control" @bind-Value="brand.Name" />
+                        <ValidationMessage For="@(() => brand.Name)" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Описание</label>
+                        <InputTextArea class="form-control" rows="4" @bind-Value="brand.Description" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Страна происхождения</label>
+                        <InputText class="form-control" @bind-Value="brand.Country" />
+                    </div>
+
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary">Сохранить</button>
+                        <a href="/Admin/Brands" class="btn btn-secondary">Отмена</a>
+                    </div>
+                </div>
+            </div>
+        </EditForm>
+    }
+    else
+    {
+        <p>Бренд не найден</p>
+        <a href="/Admin/Brands" class="btn btn-primary">Вернуться к списку</a>
+    }
+</div>
+
+@code {
+    [Parameter] public int Id { get; set; }
+    private Brand? brand;
+
+    protected override async Task OnInitializedAsync()
+    {
+        brand = await BrandService.GetBrandByIdAsync(Id);
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        if (brand != null && await BrandService.UpdateBrandAsync(brand))
+        {
+            Navigation.NavigateTo("/Admin/Brands");
+        }
+    }
+}
+

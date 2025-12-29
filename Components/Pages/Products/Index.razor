@@ -1,0 +1,107 @@
+@page "/Products"
+@inject ProductService ProductService
+
+<PageTitle>Каталог товаров</PageTitle>
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Фильтры</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Поиск</label>
+                        <input type="text" class="form-control" @bind="searchTerm" @bind:event="oninput" placeholder="Название товара..." />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Бренд</label>
+                        <select class="form-select" @bind="selectedBrandId">
+                            <option value="">Все бренды</option>
+                            @foreach (var brand in brands)
+                            {
+                                <option value="@brand.Id">@brand.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Категория</label>
+                        <select class="form-select" @bind="selectedCategoryId">
+                            <option value="">Все категории</option>
+                            @foreach (var category in categories)
+                            {
+                                <option value="@category.Id">@category.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <button class="btn btn-primary w-100" @onclick="ApplyFilters">Применить</button>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-9">
+            <h2 class="mb-4">Каталог товаров</h2>
+            @if (products != null && products.Any())
+            {
+                <div class="row">
+                    @foreach (var product in products)
+                    {
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100">
+                                @if (!string.IsNullOrEmpty(product.ImageUrl))
+                                {
+                                    <img src="@product.ImageUrl" class="card-img-top" alt="@product.Name" style="height: 200px; object-fit: cover;">
+                                }
+                                <div class="card-body">
+                                    <h5 class="card-title">@product.Name</h5>
+                                    <p class="text-muted">@product.Brand?.Name</p>
+                                    <p class="card-text">@product.Category?.Name</p>
+                                    <p class="card-text"><strong class="text-primary">@product.Price.ToString("N2") ₽</strong></p>
+                                    @if (product.IsAvailable && product.StockQuantity > 0)
+                                    {
+                                        <a href="/Products/Details/@product.Id" class="btn btn-primary w-100">Подробнее</a>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-secondary w-100" disabled>Нет в наличии</button>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <p class="text-center">Товары не найдены</p>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<Product>? products;
+    private List<Brand> brands = new();
+    private List<Category> categories = new();
+    private string? searchTerm;
+    private int? selectedBrandId;
+    private int? selectedCategoryId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        brands = await ProductService.GetAllBrandsAsync();
+        categories = await ProductService.GetAllCategoriesAsync();
+        await ApplyFilters();
+    }
+
+    private async Task ApplyFilters()
+    {
+        products = await ProductService.SearchProductsAsync(searchTerm, selectedBrandId, selectedCategoryId);
+    }
+}
+

@@ -1,0 +1,65 @@
+@page "/Admin"
+@attribute [Authorize(Roles = "Admin,Manager")]
+
+<PageTitle>Админ-панель</PageTitle>
+
+<div class="container mt-4">
+    <h2>Админ-панель</h2>
+    <hr />
+
+    <AuthorizeView Roles="Admin">
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Товары</h5>
+                        <p class="card-text">Управление товарами</p>
+                        <a href="/Admin/Products" class="btn btn-primary">Управление товарами</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Бренды</h5>
+                        <p class="card-text">Управление брендами</p>
+                        <a href="/Admin/Brands" class="btn btn-primary">Управление брендами</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Категории</h5>
+                        <p class="card-text">Управление категориями</p>
+                        <a href="/Admin/Categories" class="btn btn-primary">Управление категориями</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </AuthorizeView>
+
+    <div class="row mt-4">
+        <div class="col-md-4 mb-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Заказы</h5>
+                    <p class="card-text">Управление заказами</p>
+                    <a href="/Admin/Orders" class="btn btn-primary">Управление заказами</a>
+                </div>
+            </div>
+        </div>
+        <AuthorizeView Roles="Admin">
+            <div class="col-md-4 mb-3">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Excel</h5>
+                        <p class="card-text">Экспорт/Импорт данных</p>
+                        <a href="/Admin/Excel" class="btn btn-primary">Excel операции</a>
+                    </div>
+                </div>
+            </div>
+        </AuthorizeView>
+    </div>
+</div>
+

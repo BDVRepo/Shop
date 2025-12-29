@@ -1,0 +1,80 @@
+@page "/Admin/Categories"
+@attribute [Authorize(Roles = "Admin")]
+@inject CategoryService CategoryService
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Управление категориями</PageTitle>
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Управление категориями</h2>
+        <a href="/Admin/Categories/Create" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Добавить категорию
+        </a>
+    </div>
+
+    @if (categories != null && categories.Any())
+    {
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Название</th>
+                        <th>Описание</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var category in categories)
+                    {
+                        <tr>
+                            <td>@category.Id</td>
+                            <td>@category.Name</td>
+                            <td>@(category.Description ?? "-")</td>
+                            <td>
+                                <a href="/Admin/Categories/Edit/@category.Id" class="btn btn-sm btn-warning">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <button class="btn btn-sm btn-danger" @onclick="() => DeleteCategory(category.Id)">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <p class="text-center">Категории не найдены</p>
+    }
+</div>
+
+@code {
+    private List<Category>? categories;
+
+    protected override async Task OnInitializedAsync()
+    {
+        categories = await CategoryService.GetAllCategoriesAsync();
+    }
+
+    private async Task DeleteCategory(int id)
+    {
+        if (await JSRuntime.InvokeAsync<bool>("confirm", "Вы уверены, что хотите удалить эту категорию?"))
+        {
+            if (await CategoryService.DeleteCategoryAsync(id))
+            {
+                categories = await CategoryService.GetAllCategoriesAsync();
+                StateHasChanged();
+            }
+            else
+            {
+                await JSRuntime.InvokeVoidAsync("alert", "Не удалось удалить категорию. Возможно, она используется в товарах.");
+            }
+        }
+    }
+}
+

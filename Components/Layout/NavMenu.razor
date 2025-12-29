@@ -1,0 +1,42 @@
+@inject NavigationManager Navigation
+
+<aside>
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <a class="navbar-item" href="/">
+                <strong>SHOP</strong>
+            </a>
+        </div>
+        <div class="navbar-menu">
+            <div class="navbar-start">
+                <a class="navbar-item" href="/">
+                    <i class="bi bi-house"></i> Главная
+                </a>
+                <a class="navbar-item" href="/Products">
+                    <i class="bi bi-bag"></i> Каталог
+                </a>
+            </div>
+            <AuthorizeView>
+                <Authorized>
+                    <div class="navbar-start">
+                        <a class="navbar-item" href="/Cart">
+                            <i class="bi bi-cart"></i> Корзина
+                        </a>
+                        <a class="navbar-item" href="/Orders">
+                            <i class="bi bi-receipt"></i> Мои заказы
+                        </a>
+                        <a class="navbar-item" href="/Account/Manage">
+                            <i class="bi bi-person"></i> Личный кабинет
+                        </a>
+                        <AuthorizeView Roles="Admin,Manager">
+                            <a class="navbar-item" href="/Admin">
+                                <i class="bi bi-gear"></i> Админ-панель
+                            </a>
+                        </AuthorizeView>
+                    </div>
+                </Authorized>
+            </AuthorizeView>
+        </div>
+    </nav>
+</aside>
+

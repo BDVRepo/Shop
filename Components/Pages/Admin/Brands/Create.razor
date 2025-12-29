@@ -1,0 +1,54 @@
+@page "/Admin/Brands/Create"
+@attribute [Authorize(Roles = "Admin")]
+@inject BrandService BrandService
+@inject NavigationManager Navigation
+
+<PageTitle>Добавить бренд</PageTitle>
+
+<div class="container mt-4">
+    <h2>Добавить новый бренд</h2>
+    <hr />
+
+    <EditForm Model="@brand" OnValidSubmit="@HandleValidSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary class="text-danger" />
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label">Название бренда *</label>
+                    <InputText class="form-control" @bind-Value="brand.Name" />
+                    <ValidationMessage For="@(() => brand.Name)" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Описание</label>
+                    <InputTextArea class="form-control" rows="4" @bind-Value="brand.Description" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Страна происхождения</label>
+                    <InputText class="form-control" @bind-Value="brand.Country" />
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary">Создать</button>
+                    <a href="/Admin/Brands" class="btn btn-secondary">Отмена</a>
+                </div>
+            </div>
+        </div>
+    </EditForm>
+</div>
+
+@code {
+    private Brand brand = new();
+
+    private async Task HandleValidSubmit()
+    {
+        if (await BrandService.CreateBrandAsync(brand))
+        {
+            Navigation.NavigateTo("/Admin/Brands");
+        }
+    }
+}
+

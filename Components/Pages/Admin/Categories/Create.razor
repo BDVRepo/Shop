@@ -1,0 +1,49 @@
+@page "/Admin/Categories/Create"
+@attribute [Authorize(Roles = "Admin")]
+@inject CategoryService CategoryService
+@inject NavigationManager Navigation
+
+<PageTitle>Добавить категорию</PageTitle>
+
+<div class="container mt-4">
+    <h2>Добавить новую категорию</h2>
+    <hr />
+
+    <EditForm Model="@category" OnValidSubmit="@HandleValidSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary class="text-danger" />
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label">Название категории *</label>
+                    <InputText class="form-control" @bind-Value="category.Name" />
+                    <ValidationMessage For="@(() => category.Name)" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Описание</label>
+                    <InputTextArea class="form-control" rows="4" @bind-Value="category.Description" />
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary">Создать</button>
+                    <a href="/Admin/Categories" class="btn btn-secondary">Отмена</a>
+                </div>
+            </div>
+        </div>
+    </EditForm>
+</div>
+
+@code {
+    private Category category = new();
+
+    private async Task HandleValidSubmit()
+    {
+        if (await CategoryService.CreateCategoryAsync(category))
+        {
+            Navigation.NavigateTo("/Admin/Categories");
+        }
+    }
+}
+

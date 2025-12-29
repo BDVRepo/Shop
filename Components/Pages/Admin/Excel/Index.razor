@@ -1,0 +1,150 @@
+@page "/Admin/Excel"
+@attribute [Authorize(Roles = "Admin")]
+@inject ExcelService ExcelService
+@inject ProductService ProductService
+@inject IJSRuntime JSRuntime
+@using Microsoft.AspNetCore.Components.Forms
+@using Shop.Services
+
+<PageTitle>Экспорт/Импорт Excel</PageTitle>
+
+<div class="container mt-4">
+    <h2>Экспорт и импорт данных</h2>
+    <hr />
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Экспорт данных</h5>
+                </div>
+                <div class="card-body">
+                    <p>Вы можете экспортировать данные в Excel файл</p>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-success" @onclick="ExportProducts">
+                            <i class="bi bi-download"></i> Экспортировать товары
+                        </button>
+                        <button class="btn btn-success" @onclick="ExportOrders">
+                            <i class="bi bi-download"></i> Экспортировать заказы
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Импорт данных</h5>
+                </div>
+                <div class="card-body">
+                    <p>Загрузите Excel файл для импорта товаров</p>
+                    <InputFile OnChange="HandleFileSelected" accept=".xlsx,.xls" />
+                    <div class="mt-3">
+                        <button class="btn btn-primary" @onclick="ImportProducts" disabled="@(selectedFile == null)">
+                            <i class="bi bi-upload"></i> Импортировать товары
+                        </button>
+                    </div>
+                    @if (!string.IsNullOrEmpty(importResult))
+                    {
+                        <div class="alert alert-info mt-3">
+                            @importResult
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5>Формат файла для импорта</h5>
+        </div>
+        <div class="card-body">
+            <p>Файл Excel должен содержать следующие столбцы:</p>
+            <ul>
+                <li><strong>Название</strong> - Название товара (обязательно)</li>
+                <li><strong>Описание</strong> - Описание товара</li>
+                <li><strong>Цена</strong> - Цена товара (обязательно)</li>
+                <li><strong>Бренд</strong> - Название бренда (должен существовать в системе)</li>
+                <li><strong>Категория</strong> - Название категории (должна существовать в системе)</li>
+                <li><strong>Размеры</strong> - Размеры через запятую</li>
+                <li><strong>Цвет</strong> - Цвет товара</li>
+                <li><strong>Количество на складе</strong> - Количество товара на складе</li>
+                <li><strong>Доступен</strong> - "Да" или "Нет"</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+@code {
+    private IBrowserFile? selectedFile;
+    private string? importResult;
+
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        selectedFile = e.File;
+        importResult = null;
+    }
+
+    private async Task ExportProducts()
+    {
+        try
+        {
+            var fileBytes = await ExcelService.ExportProductsToExcelAsync();
+            var fileName = $"Товары_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+            
+            await JSRuntime.InvokeVoidAsync("downloadFile", fileName, Convert.ToBase64String(fileBytes));
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"Ошибка при экспорте: {ex.Message}");
+        }
+    }
+
+    private async Task ExportOrders()
+    {
+        try
+        {
+            var fileBytes = await ExcelService.ExportOrdersToExcelAsync();
+            var fileName = $"Заказы_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+            
+            await JSRuntime.InvokeVoidAsync("downloadFile", fileName, Convert.ToBase64String(fileBytes));
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"Ошибка при экспорте: {ex.Message}");
+        }
+    }
+
+    private async Task ImportProducts()
+    {
+        if (selectedFile == null) return;
+
+        try
+        {
+            using var stream = selectedFile.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024); // 10MB
+            var (success, failed, errors) = await ExcelService.ImportProductsFromExcelAsync(stream);
+            
+            importResult = $"Успешно импортировано: {success}, Ошибок: {failed}";
+            
+            if (errors.Any())
+            {
+                importResult += "\nОшибки:\n" + string.Join("\n", errors);
+            }
+            
+            StateHasChanged();
+            
+            if (success > 0)
+            {
+                await JSRuntime.InvokeVoidAsync("alert", $"Импорт завершен. Успешно: {success}, Ошибок: {failed}");
+            }
+        }
+        catch (Exception ex)
+        {
+            importResult = $"Ошибка при импорте: {ex.Message}";
+            await JSRuntime.InvokeVoidAsync("alert", $"Ошибка при импорте: {ex.Message}");
+        }
+    }
+}
+

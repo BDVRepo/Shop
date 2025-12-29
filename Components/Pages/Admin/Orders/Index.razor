@@ -1,0 +1,93 @@
+@page "/Admin/Orders"
+@attribute [Authorize(Roles = "Admin,Manager")]
+@inject OrderService OrderService
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Управление заказами</PageTitle>
+
+<div class="container mt-4">
+    <h2>Управление заказами</h2>
+    <hr />
+
+    @if (orders != null && orders.Any())
+    {
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>Номер заказа</th>
+                        <th>Пользователь</th>
+                        <th>Дата</th>
+                        <th>Статус</th>
+                        <th>Сумма</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var order in orders)
+                    {
+                        <tr>
+                            <td><strong>@order.OrderNumber</strong></td>
+                            <td>@order.User?.Email</td>
+                            <td>@order.OrderDate.ToString("dd.MM.yyyy HH:mm")</td>
+                            <td>
+                                <select class="form-select form-select-sm" style="width: auto; display: inline-block;" @onchange="(e) => UpdateStatus(order.Id, e.Value?.ToString() ?? "")">
+                                    <option value="Новый" selected="@(order.Status == "Новый")">Новый</option>
+                                    <option value="В обработке" selected="@(order.Status == "В обработке")">В обработке</option>
+                                    <option value="Отправлен" selected="@(order.Status == "Отправлен")">Отправлен</option>
+                                    <option value="Доставлен" selected="@(order.Status == "Доставлен")">Доставлен</option>
+                                    <option value="Отменен" selected="@(order.Status == "Отменен")">Отменен</option>
+                                </select>
+                            </td>
+                            <td><strong>@order.TotalAmount.ToString("N2") ₽</strong></td>
+                            <td>
+                                <a href="/Orders/Details/@order.Id" class="btn btn-sm btn-primary">Подробнее</a>
+                                <AuthorizeView Roles="Admin">
+                                    <button class="btn btn-sm btn-danger" @onclick="() => DeleteOrder(order.Id)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </AuthorizeView>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <p class="text-center">Заказы не найдены</p>
+    }
+</div>
+
+@code {
+    private List<Order>? orders;
+
+    protected override async Task OnInitializedAsync()
+    {
+        orders = await OrderService.GetAllOrdersAsync();
+    }
+
+    private async Task UpdateStatus(int orderId, string newStatus)
+    {
+        if (await OrderService.UpdateOrderStatusAsync(orderId, newStatus))
+        {
+            orders = await OrderService.GetAllOrdersAsync();
+            StateHasChanged();
+        }
+    }
+
+    private async Task DeleteOrder(int id)
+    {
+        if (await JSRuntime.InvokeAsync<bool>("confirm", "Вы уверены, что хотите удалить этот заказ?"))
+        {
+            if (await OrderService.DeleteOrderAsync(id))
+            {
+                orders = await OrderService.GetAllOrdersAsync();
+                StateHasChanged();
+            }
+        }
+    }
+}
+

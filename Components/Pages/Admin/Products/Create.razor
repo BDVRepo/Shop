@@ -1,0 +1,114 @@
+@page "/Admin/Products/Create"
+@attribute [Authorize(Roles = "Admin")]
+@inject ProductService ProductService
+@inject NavigationManager Navigation
+
+<PageTitle>Добавить товар</PageTitle>
+
+<div class="container mt-4">
+    <h2>Добавить новый товар</h2>
+    <hr />
+
+    <EditForm Model="@product" OnValidSubmit="@HandleValidSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary class="text-danger" />
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label">Название товара *</label>
+                    <InputText class="form-control" @bind-Value="product.Name" />
+                    <ValidationMessage For="@(() => product.Name)" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Описание</label>
+                    <InputTextArea class="form-control" rows="4" @bind-Value="product.Description" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Цена *</label>
+                    <InputNumber class="form-control" @bind-Value="product.Price" />
+                    <ValidationMessage For="@(() => product.Price)" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Изображение (URL)</label>
+                    <InputText class="form-control" @bind-Value="product.ImageUrl" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Размеры (через запятую)</label>
+                    <InputText class="form-control" @bind-Value="product.Sizes" placeholder="S,M,L,XL" />
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label">Цвет</label>
+                    <InputText class="form-control" @bind-Value="product.Color" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Количество на складе</label>
+                    <InputNumber class="form-control" @bind-Value="product.StockQuantity" />
+                </div>
+
+                <div class="mb-3 form-check">
+                    <InputCheckbox class="form-check-input" @bind-Value="product.IsAvailable" />
+                    <label class="form-check-label">Доступен для заказа</label>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Бренд *</label>
+                    <InputSelect class="form-select" @bind-Value="product.BrandId">
+                        <option value="0">-- Выберите бренд --</option>
+                        @foreach (var brand in brands)
+                        {
+                            <option value="@brand.Id">@brand.Name</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="@(() => product.BrandId)" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Категория *</label>
+                    <InputSelect class="form-select" @bind-Value="product.CategoryId">
+                        <option value="0">-- Выберите категорию --</option>
+                        @foreach (var category in categories)
+                        {
+                            <option value="@category.Id">@category.Name</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="@(() => product.CategoryId)" />
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <button type="submit" class="btn btn-primary">Создать</button>
+            <a href="/Admin/Products" class="btn btn-secondary">Отмена</a>
+        </div>
+    </EditForm>
+</div>
+
+@code {
+    private Product product = new();
+    private List<Brand> brands = new();
+    private List<Category> categories = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        brands = await ProductService.GetAllBrandsAsync();
+        categories = await ProductService.GetAllCategoriesAsync();
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        if (await ProductService.CreateProductAsync(product))
+        {
+            Navigation.NavigateTo("/Admin/Products");
+        }
+    }
+}
+

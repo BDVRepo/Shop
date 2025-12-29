@@ -1,0 +1,169 @@
+@page "/Orders/Create"
+@attribute [Authorize]
+@inject CartService CartService
+@inject OrderService OrderService
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Оформление заказа</PageTitle>
+
+<div class="container mt-4">
+    <h2>Оформление заказа</h2>
+    <hr />
+
+    @if (cartItems != null && cartItems.Any())
+    {
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5>Данные доставки</h5>
+                    </div>
+                    <div class="card-body">
+                        <EditForm Model="@order" OnValidSubmit="@HandleValidSubmit">
+                            <DataAnnotationsValidator />
+                            <ValidationSummary class="text-danger" />
+
+                            <div class="mb-3">
+                                <label class="form-label">Имя получателя *</label>
+                                <InputText class="form-control" @bind-Value="order.RecipientName" />
+                                <ValidationMessage For="@(() => order.RecipientName)" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Телефон получателя *</label>
+                                <InputText class="form-control" @bind-Value="order.RecipientPhone" />
+                                <ValidationMessage For="@(() => order.RecipientPhone)" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Адрес доставки *</label>
+                                <InputTextArea class="form-control" rows="3" @bind-Value="order.DeliveryAddress" />
+                                <ValidationMessage For="@(() => order.DeliveryAddress)" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Комментарий к заказу</label>
+                                <InputTextArea class="form-control" rows="3" @bind-Value="order.Comment" />
+                            </div>
+
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <h5>Состав заказа</h5>
+                                </div>
+                                <div class="card-body">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Товар</th>
+                                                <th>Количество</th>
+                                                <th>Цена</th>
+                                                <th>Итого</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var item in cartItems)
+                                            {
+                                                <tr>
+                                                    <td>@item.Product?.Name</td>
+                                                    <td>@item.Quantity</td>
+                                                    <td>@item.UnitPrice.ToString("N2") ₽</td>
+                                                    <td>@((item.UnitPrice * item.Quantity).ToString("N2")) ₽</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                        <tfoot>
+                                            <tr>
+                                                <td colspan="3" class="text-end"><strong>Итого:</strong></td>
+                                                <td><strong>@total.ToString("N2") ₽</strong></td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-lg w-100">Оформить заказ</button>
+                            <a href="/Cart" class="btn btn-outline-secondary w-100 mt-2">Вернуться в корзину</a>
+                        </EditForm>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Сумма заказа</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Товаров:</span>
+                            <span>@cartItems.Sum(x => x.Quantity)</span>
+                        </div>
+                        <hr />
+                        <div class="d-flex justify-content-between">
+                            <strong>Итого:</strong>
+                            <strong class="text-primary">@total.ToString("N2") ₽</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-5">
+            <p>Корзина пуста</p>
+            <a href="/Products" class="btn btn-primary">Перейти в каталог</a>
+        </div>
+    }
+</div>
+
+@code {
+    private List<CartItem>? cartItems;
+    private decimal total;
+    private Order order = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        cartItems = CartService.GetItems();
+        total = CartService.GetTotal();
+
+        if (!cartItems.Any())
+        {
+            Navigation.NavigateTo("/Cart");
+            return;
+        }
+
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "";
+        order.UserId = userId;
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        if (cartItems == null || !cartItems.Any()) return;
+
+        var orderItems = cartItems.Select(item => new OrderItem
+        {
+            ProductId = item.ProductId,
+            Quantity = item.Quantity,
+            UnitPrice = item.UnitPrice,
+            Size = item.Size
+        }).ToList();
+
+        var orderNumber = await OrderService.CreateOrderAsync(order, orderItems);
+        if (!string.IsNullOrEmpty(orderNumber))
+        {
+            CartService.Clear();
+            var createdOrder = await OrderService.GetOrderByNumberAsync(orderNumber);
+            if (createdOrder != null)
+            {
+                Navigation.NavigateTo($"/Orders/Details/{createdOrder.Id}");
+            }
+            else
+            {
+                Navigation.NavigateTo("/Orders");
+            }
+        }
+    }
+}
+

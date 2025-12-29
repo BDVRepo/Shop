@@ -1,0 +1,124 @@
+@page "/Cart"
+@attribute [Authorize]
+@inject CartService CartService
+@inject NavigationManager Navigation
+@inject ProductService ProductService
+@implements IDisposable
+
+<PageTitle>Корзина</PageTitle>
+
+<div class="container mt-4">
+    <h2>Корзина покупок</h2>
+    <hr />
+
+    @if (items != null && items.Any())
+    {
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-body">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Товар</th>
+                                    <th>Цена</th>
+                                    <th>Количество</th>
+                                    <th>Размер</th>
+                                    <th>Итого</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in items)
+                                {
+                                    <tr>
+                                        <td>
+                                            <strong>@item.Product?.Name</strong>
+                                            <br />
+                                            <small class="text-muted">@item.Product?.Brand?.Name</small>
+                                        </td>
+                                        <td>@item.UnitPrice.ToString("N2") ₽</td>
+                                        <td>
+                                            <div class="input-group" style="width: 120px;">
+                                                <button class="btn btn-sm btn-outline-secondary" @onclick="() => UpdateQuantity(item.ProductId, item.Quantity - 1, item.Size)">-</button>
+                                                <input type="number" class="form-control text-center" value="@item.Quantity" @onchange="(e) => UpdateQuantity(item.ProductId, int.Parse(e.Value?.ToString() ?? "1"), item.Size)" />
+                                                <button class="btn btn-sm btn-outline-secondary" @onclick="() => UpdateQuantity(item.ProductId, item.Quantity + 1, item.Size)">+</button>
+                                            </div>
+                                        </td>
+                                        <td>@(item.Size ?? "-")</td>
+                                        <td><strong>@((item.UnitPrice * item.Quantity).ToString("N2")) ₽</strong></td>
+                                        <td>
+                                            <button class="btn btn-sm btn-danger" @onclick="() => RemoveItem(item.ProductId, item.Size)">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Итого</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-3">
+                            <span>Товаров: @items.Sum(x => x.Quantity)</span>
+                            <span><strong>@total.ToString("N2") ₽</strong></span>
+                        </div>
+                        <hr />
+                        <a href="/Orders/Create" class="btn btn-primary w-100 btn-lg">Оформить заказ</a>
+                        <a href="/Products" class="btn btn-outline-secondary w-100 mt-2">Продолжить покупки</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-5">
+            <i class="bi bi-cart-x" style="font-size: 5rem; color: #ccc;"></i>
+            <h3 class="mt-3">Корзина пуста</h3>
+            <p class="text-muted">Добавьте товары в корзину для оформления заказа</p>
+            <a href="/Products" class="btn btn-primary">Перейти в каталог</a>
+        </div>
+    }
+</div>
+
+@code {
+    private List<CartItem>? items;
+    private decimal total;
+
+    protected override void OnInitialized()
+    {
+        CartService.OnChange += StateHasChanged;
+        LoadCart();
+    }
+
+    private void LoadCart()
+    {
+        items = CartService.GetItems();
+        total = CartService.GetTotal();
+    }
+
+    private void UpdateQuantity(int productId, int quantity, string? size)
+    {
+        CartService.UpdateQuantity(productId, quantity, size);
+        LoadCart();
+    }
+
+    private void RemoveItem(int productId, string? size)
+    {
+        CartService.RemoveItem(productId, size);
+        LoadCart();
+    }
+
+    public void Dispose()
+    {
+        CartService.OnChange -= StateHasChanged;
+    }
+}
+

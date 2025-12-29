@@ -1,0 +1,85 @@
+@page "/Orders"
+@attribute [Authorize]
+@inject OrderService OrderService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Мои заказы</PageTitle>
+
+<div class="container mt-4">
+    <h2>Мои заказы</h2>
+    <hr />
+
+    @if (orders != null && orders.Any())
+    {
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Номер заказа</th>
+                        <th>Дата</th>
+                        <th>Статус</th>
+                        <th>Сумма</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var order in orders)
+                    {
+                        <tr>
+                            <td><strong>@order.OrderNumber</strong></td>
+                            <td>@order.OrderDate.ToString("dd.MM.yyyy HH:mm")</td>
+                            <td>
+                                <span class="badge bg-@GetStatusBadgeClass(order.Status)">@order.Status</span>
+                            </td>
+                            <td><strong>@order.TotalAmount.ToString("N2") ₽</strong></td>
+                            <td>
+                                <a href="/Orders/Details/@order.Id" class="btn btn-sm btn-primary">Подробнее</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else if (orders != null)
+    {
+        <div class="text-center py-5">
+            <i class="bi bi-receipt-cutoff" style="font-size: 5rem; color: #ccc;"></i>
+            <h3 class="mt-3">У вас пока нет заказов</h3>
+            <a href="/Products" class="btn btn-primary">Перейти в каталог</a>
+        </div>
+    }
+    else
+    {
+        <p>Загрузка...</p>
+    }
+</div>
+
+@code {
+    private List<Order>? orders;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        
+        if (!string.IsNullOrEmpty(userId))
+        {
+            orders = await OrderService.GetUserOrdersAsync(userId);
+        }
+    }
+
+    private string GetStatusBadgeClass(string status)
+    {
+        return status switch
+        {
+            "Новый" => "primary",
+            "В обработке" => "warning",
+            "Отправлен" => "info",
+            "Доставлен" => "success",
+            "Отменен" => "danger",
+            _ => "secondary"
+        };
+    }
+}
+

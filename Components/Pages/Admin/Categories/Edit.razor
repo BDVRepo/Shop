@@ -1,0 +1,63 @@
+@page "/Admin/Categories/Edit/{Id:int}"
+@attribute [Authorize(Roles = "Admin")]
+@inject CategoryService CategoryService
+@inject NavigationManager Navigation
+
+<PageTitle>Редактировать категорию</PageTitle>
+
+<div class="container mt-4">
+    <h2>Редактировать категорию</h2>
+    <hr />
+
+    @if (category != null)
+    {
+        <EditForm Model="@category" OnValidSubmit="@HandleValidSubmit">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" />
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Название категории *</label>
+                        <InputText class="form-control" @bind-Value="category.Name" />
+                        <ValidationMessage For="@(() => category.Name)" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Описание</label>
+                        <InputTextArea class="form-control" rows="4" @bind-Value="category.Description" />
+                    </div>
+
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary">Сохранить</button>
+                        <a href="/Admin/Categories" class="btn btn-secondary">Отмена</a>
+                    </div>
+                </div>
+            </div>
+        </EditForm>
+    }
+    else
+    {
+        <p>Категория не найдена</p>
+        <a href="/Admin/Categories" class="btn btn-primary">Вернуться к списку</a>
+    }
+</div>
+
+@code {
+    [Parameter] public int Id { get; set; }
+    private Category? category;
+
+    protected override async Task OnInitializedAsync()
+    {
+        category = await CategoryService.GetCategoryByIdAsync(Id);
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        if (category != null && await CategoryService.UpdateCategoryAsync(category))
+        {
+            Navigation.NavigateTo("/Admin/Categories");
+        }
+    }
+}
+

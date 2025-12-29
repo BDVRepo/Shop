@@ -1,0 +1,52 @@
+@page "/"
+@inject ProductService ProductService
+
+<PageTitle>Главная</PageTitle>
+
+<div class="container-fluid">
+    <div class="hero-section text-center py-5 mb-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+        <h1 class="display-4 mb-3">Онлайн-магазин брендовой одежды</h1>
+        <p class="lead">Самые модные и стильные товары от ведущих брендов</p>
+        <a href="/Products" class="btn btn-light btn-lg mt-3">Смотреть каталог</a>
+    </div>
+
+    <div class="container">
+        <h2 class="text-center mb-4">Популярные товары</h2>
+        <div class="row">
+            @if (products != null && products.Any())
+            {
+                @foreach (var product in products.Take(6))
+                {
+                    <div class="col-md-4 mb-4">
+                        <div class="card h-100">
+                            @if (!string.IsNullOrEmpty(product.ImageUrl))
+                            {
+                                <img src="@product.ImageUrl" class="card-img-top" alt="@product.Name" style="height: 250px; object-fit: cover;">
+                            }
+                            <div class="card-body">
+                                <h5 class="card-title">@product.Name</h5>
+                                <p class="card-text">@product.Brand?.Name</p>
+                                <p class="card-text"><strong>@product.Price.ToString("N2") ₽</strong></p>
+                                <a href="/Products/Details/@product.Id" class="btn btn-primary">Подробнее</a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <p class="text-center">Товары загружаются...</p>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<Product>? products;
+
+    protected override async Task OnInitializedAsync()
+    {
+        products = await ProductService.GetAvailableProductsAsync();
+    }
+}
+

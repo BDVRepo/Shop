@@ -1,0 +1,129 @@
+@page "/Orders/Details/{Id:int}"
+@attribute [Authorize]
+@inject OrderService OrderService
+@inject NavigationManager Navigation
+
+<PageTitle>Детали заказа</PageTitle>
+
+<div class="container mt-4">
+    @if (order != null)
+    {
+        <div class="row">
+            <div class="col-md-8">
+                <h2>Заказ @order.OrderNumber</h2>
+                <hr />
+
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5>Информация о заказе</h5>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row">
+                            <dt class="col-sm-4">Номер заказа:</dt>
+                            <dd class="col-sm-8"><strong>@order.OrderNumber</strong></dd>
+
+                            <dt class="col-sm-4">Дата заказа:</dt>
+                            <dd class="col-sm-8">@order.OrderDate.ToString("dd.MM.yyyy HH:mm")</dd>
+
+                            <dt class="col-sm-4">Статус:</dt>
+                            <dd class="col-sm-8">
+                                <span class="badge bg-@GetStatusBadgeClass(order.Status)">@order.Status</span>
+                            </dd>
+
+                            <dt class="col-sm-4">Получатель:</dt>
+                            <dd class="col-sm-8">@order.RecipientName</dd>
+
+                            <dt class="col-sm-4">Телефон:</dt>
+                            <dd class="col-sm-8">@order.RecipientPhone</dd>
+
+                            <dt class="col-sm-4">Адрес доставки:</dt>
+                            <dd class="col-sm-8">@order.DeliveryAddress</dd>
+
+                            @if (!string.IsNullOrEmpty(order.Comment))
+                            {
+                                <dt class="col-sm-4">Комментарий:</dt>
+                                <dd class="col-sm-8">@order.Comment</dd>
+                            }
+                        </dl>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Состав заказа</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Товар</th>
+                                    <th>Количество</th>
+                                    <th>Размер</th>
+                                    <th>Цена</th>
+                                    <th>Итого</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in order.OrderItems)
+                                {
+                                    <tr>
+                                        <td>
+                                            <strong>@item.Product?.Name</strong>
+                                            <br />
+                                            <small class="text-muted">@item.Product?.Brand?.Name</small>
+                                        </td>
+                                        <td>@item.Quantity</td>
+                                        <td>@(item.Size ?? "-")</td>
+                                        <td>@item.UnitPrice.ToString("N2") ₽</td>
+                                        <td><strong>@((item.UnitPrice * item.Quantity).ToString("N2")) ₽</strong></td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="4" class="text-end"><strong>Итого:</strong></td>
+                                    <td><strong class="text-primary">@order.TotalAmount.ToString("N2") ₽</strong></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <a href="/Orders" class="btn btn-secondary">Вернуться к списку заказов</a>
+        </div>
+    }
+    else
+    {
+        <div class="text-center">
+            <p>Заказ не найден</p>
+            <a href="/Orders" class="btn btn-primary">Вернуться к списку заказов</a>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int Id { get; set; }
+    private Order? order;
+
+    protected override async Task OnInitializedAsync()
+    {
+        order = await OrderService.GetOrderByIdAsync(Id);
+    }
+
+    private string GetStatusBadgeClass(string status)
+    {
+        return status switch
+        {
+            "Новый" => "primary",
+            "В обработке" => "warning",
+            "Отправлен" => "info",
+            "Доставлен" => "success",
+            "Отменен" => "danger",
+            _ => "secondary"
+        };
+    }
+}
+

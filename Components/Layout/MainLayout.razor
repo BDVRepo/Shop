@@ -1,0 +1,30 @@
+@inherits LayoutView
+@inject NavigationManager Navigation
+
+<PageTitle>Онлайн-магазин брендовой одежды</PageTitle>
+
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <main>
+        <div class="top-row px-4 auth">
+            <AuthorizeView>
+                <Authorized>
+                    <a href="/Account/Manage">@context.User.Identity?.Name</a>
+                    <a href="/Account/Logout">Выйти</a>
+                </Authorized>
+                <NotAuthorized>
+                    <a href="/Account/Login">Войти</a>
+                    <a href="/Account/Register">Регистрация</a>
+                </NotAuthorized>
+            </AuthorizeView>
+        </div>
+
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>
+
